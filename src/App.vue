@@ -1,46 +1,32 @@
 <template>
   <div id="app">
-      <div
-          class="app-main"
-          :class="{'show-game':isShowGame}"
-      >
-          <SelectDifficulty
-              class="app-section"
-              @showGame="showGame"
-          />
-
-          <MineSweeper
-              :play="isShowGame"
+    <MineSweeper
               :width="width"
               :height="height"
               :mine-count="mineCount"
               class="app-section"
-              @selectDifficulty="selectDifficulty"
-          />
-      </div>
+           />
   </div>
 </template>
 
 <script>
-import SelectDifficulty from '@/components/SelectDifficulty';
 import MineSweeper from '@/components/MineSweeper';
 
 export default {
   name: 'App',
   components: {
-      SelectDifficulty,
       MineSweeper,
   },
   data () {
       return {
           isShowGame: false,
-          width: 0,
-          height: 0,
-          mineCount: 0,
+          width: 30,
+          height: 16,
+          mineCount: 99,
       };
   },
   created(){
-      // this.showGame(30,16,99);
+      this.showGame(30,16,99);
   },
   methods: {
       showGame (width, height, mineCount) {
@@ -57,17 +43,18 @@ export default {
 </script>
 
 <style scoped>
+html,body{
+  width: 100%;
+  margin:0;
+}
 #app {
-  display: flex;
+
   min-height: 100vh;
-  overflow: hidden;
 }
 
 .app-main {
   width: 100%;
-  display: flex;
-  align-items: center;
-  transition: transform 1s ease;
+  /* transition: transform 1s ease; */
 }
 
 .app-main.show-game {

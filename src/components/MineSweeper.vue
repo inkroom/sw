@@ -54,14 +54,6 @@
                     重开一局
                 </button>
 
-                <button
-                    class="mine-sweeper-button"
-                    style="margin-top: 15px"
-                    @click="$emit('selectDifficulty')"
-                >
-                    改变难度
-                </button>
-
         </div>
     </div>
 </template>
@@ -78,10 +70,6 @@ function shuffle(mines, start) {
 
 export default {
     props: {
-        play: {
-            type: Boolean,
-            required: true,
-        },
         width: {
             type: Number,
             required: true,
@@ -103,6 +91,8 @@ export default {
             markStatus: [],
             selectedMineCount: 0,
             heartBeat: -1,
+            count:1,
+            firstStart:true
         };
     },
     computed: {
@@ -132,12 +122,6 @@ export default {
         },
     },
     watch: {
-        play() {
-            if (!this.play) {
-                return;
-            }
-            this.init(this.width, this.height, this.mineCount);
-        },
         selectedMineCount() {
             if (this.selectedMineCount === this.mineCount) {
                 const match = this.mines.every((isMine, index) => {
@@ -168,15 +152,19 @@ export default {
             ws = new WebSocket("ws://10.0.90.95:38293/sw");
         }
         // var ws = new WebSocket("ws://" + location.host + "/sw");
+        var _this = this;
 
         //申请一个WebSocket对象，参数是服务端地址，同http协议使用http://开头一样，WebSocket协议的url使用ws://开头，另外安全的WebSocket协议使用wss://开头
-        ws.onopen = function () {
+        ws.onopen = ()=> {
             //当WebSocket创建成功时，触发onopen事件
             console.log("open");
             ws.send('{"type":"hello"}'); //将消息发送到服务端
+            if(_this.firstStart){
+                _this.firstStart = false;
+                _this.reStart();
+            }
         };
 
-        var _this = this;
 
         ws.onmessage = (e) => {
             //当客户端收到服务端发来的消息时，触发onmessage事件，参数e.data包含server传递过来的数据
@@ -189,6 +177,14 @@ export default {
             } else if (json.type == "handleRightClick") {
                 console.log("handleRightClick", json);
                 _this.handleRightClickReal(json.x, json.y);
+            } else if(json.type=='up'){
+                if(_this.count!=json.count){// 自己入场不提示
+                    _this.$layer.msg("有人入场，当前人数："+json.count);
+                }
+                _this.count = json.count;
+            } else if(json.type=='down'){
+                    _this.$layer.msg("有人离场，当前人数："+json.count);
+                _this.count = json.count;
             }
         };
         ws.onclose = (e) => {
@@ -207,11 +203,14 @@ export default {
 
         window.sw = ws;
 
-        this.heartBeat = setInterval(() => {
-            window.sw.send(JSON.stringify({
-                type: "ping", 
-            }));
-        }, 1000);
+        // this.heartBeat = setInterval(() => {
+        //     window.sw.send(JSON.stringify({
+        //         type: "ping", 
+        //     }));
+        // }, 1000);
+    },
+    mounted(){
+        // this.reStart();
     },
     methods: {
         reStart() {
@@ -234,6 +233,7 @@ export default {
                     mines: mines,
                 })
             );
+            console.log("init 开局");
 
             var r = function RandomNum(Min, Max) {
                 var Range = Max - Min;
@@ -336,6 +336,8 @@ export default {
   /* display: flex; */
   justify-content: space-between;
   padding: 0 15px;
+
+  margin-top:50px;
 }
 
 .mine-sweeper-container {
@@ -343,6 +345,10 @@ export default {
   width: fit-content;
   margin: 0 auto;
   background-color: #f2f1f0;
+  user-select: none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
 }
 
 .mine-sweeper-row {
@@ -358,6 +364,10 @@ export default {
   text-align: center;
   background-color: #babdb6;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
 }
 
 .mine-sweeper-item.is-open {
